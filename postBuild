@@ -1,0 +1,2 @@
+#!/bin/bash
+R -e 'install.packages("renv"); renv::restore()'
