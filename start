@@ -8,5 +8,7 @@ svn export https://github.com/SLCLADAL/interactive-notebooks/trunk/notebooks not
 # Create a backup copy, if the user needs originals
 cp -r notebooks originals
 
+mv deployed-rprofile .Rprofile
+
 # This line is required according to Binder manual
 exec "$@"
