@@ -4,9 +4,9 @@
 # image
 rm -rf ~/content
 # Download latest notebooks from LADAL
-svn export https://github.com/SLCLADAL/interactive-notebooks/trunk/notebooks ~/notebooks
+svn export https://github.com/SLCLADAL/interactive-notebooks/trunk/notebooks notebooks
 # Create a backup copy, if the user needs originals
-cp -r ~/notebooks ~/originals
+cp -r notebooks originals
 
 # This line is required according to Binder manual
 exec "$@"

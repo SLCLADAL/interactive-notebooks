@@ -1,9 +1,9 @@
 source("renv/activate.R")
-setwd('~/notebooks')
+setwd('notebooks')
 setHook(
 	'rstudio.sessionInit', function(newSession) {
 		if (newSession)
-		rstudioapi::filesPaneNavigate('~/notebooks')
+		rstudioapi::filesPaneNavigate('notebooks')
 	},
 	action = 'append'
 )
