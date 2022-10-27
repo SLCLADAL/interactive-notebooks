@@ -2,13 +2,13 @@
 
 # Remove the version of notebooks stored in the repo version we use to build the Binder
 # image
-rm -rf ~/content
+rm -rf ~/notebooks
 # Download latest notebooks from LADAL
 svn export https://github.com/SLCLADAL/interactive-notebooks/trunk/notebooks notebooks
 # Create a backup copy, if the user needs originals
-cp -r notebooks originals
+cp -r ~/notebooks ~/originals
 
-mv deployed-rprofile .Rprofile
+mv deployed-rprofile ~/.Rprofile
 
 # This line is required according to Binder manual
 exec "$@"

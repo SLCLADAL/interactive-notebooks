@@ -1,5 +1,5 @@
-source("renv/activate.R")
-setwd('notebooks')
+source("~/renv/activate.R")
+setwd('~/notebooks')
 setHook(
 	'rstudio.sessionInit', function(newSession) {
 		if (newSession)
