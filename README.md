@@ -12,6 +12,7 @@ TODO: expand on the following:
 - installing dependencies via install.R as that is significantly faster 
 in the particular way binderhub creates the repo
 - recommend a way to show installing packages in a notebook but not run normally
+- System dependencies go in apt.txt
 - linting and tests:
     - We can test notebooks by ensuring that they at least run end to end
     - We should come to some kind of conclusions about showing versions as run
