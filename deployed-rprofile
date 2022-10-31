@@ -1,5 +1,4 @@
-source("~/renv/activate.R")
-setwd('~/notebooks')
+source("renv/activate.R")
 setHook(
 	'rstudio.sessionInit', function(newSession) {
 		if (newSession)
@@ -7,3 +6,5 @@ setHook(
 	},
 	action = 'append'
 )
+setwd('notebooks')
+
