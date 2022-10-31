@@ -1,0 +1,8 @@
+install.packages('ggplot2')
+install.packages('magrittr')
+install.packages('NLP')
+install.packages('reshape2')
+install.packages('rstudioapi')
+install.packages('stringi')
+install.packages('tm')
+install.packages('topicmodels')
