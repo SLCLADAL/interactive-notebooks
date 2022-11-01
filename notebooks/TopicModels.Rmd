@@ -42,31 +42,18 @@ In order for an algorithm to achieve this, we have to specify in advance how man
 
 ## Topic models and tweets
 
-Topic models are based on patterns of co-occurrence of words. But tweets are very short and can provide only limited information of that kind. Therefore treating individual tweets as documents in a topic model analysis is not likely to work well. We need to combine tweets in some way to make larger documents. Today, we will split the Election 2019 data into four groups on the basis of the party affiliation of the candidates: Coalition, Greens, Labor and Others. This is not a workshop about data wrangling, so we have grouped the tweets into four separate files for you. 
-
-
-```{r}
-my_files <- list.files(pattern = "\\.csv$")
-# inspect
-my_files
-```
-
-
-This code chunk reads the four files (it assumes that they are all in the same directory and that there are no other .csv files in that directory). Then we loop through the files and iteratively combine the text of each group of tweets into a single vector of text. The lines which use the **gsub** function remove web links, weird characters, and the character entity for ampersand (\&amp;), a relic of which was showing up in topics in our initial exploration of this data.
+Topic models are based on patterns of co-occurrence of words. But tweets are very short and can provide only limited information of that kind. Therefore treating individual tweets as documents in a topic model analysis is not likely to work well. We need to combine tweets in some way to make larger documents. Today, we will use the Echidna and Platypus data we collected earlier.
 
 ```{r}
-oztwit <- lapply(my_files, read.csv)
+# Load a dataset of tweets, to find out what is going on with that particular corpus.
+tweets = read.csv("platypus_minimal.csv")
 # extract tweet text and combine as single item
-oztweets <- lapply(oztwit, function(x){
-  x <- paste0(x$text, collapse = " ")
+normalised_tweets <- lapply(tweets$text, function(x){
   x <- tolower(x)
   x <- gsub("http.*? ", " ", x)
-    # remove weird characters
-  x <- gsub("&amp;", "", x)
-  x <- gsub("[^[:alnum:] \\#\\@]", "", x)
 })
 # inspect
-str(oztweets)
+str(normalised_tweets)
 ```
 
 
@@ -74,29 +61,30 @@ str(oztweets)
 
 The **tm** (text mining) package provides useful tools for preprocessing text, so our next step is to make a Corpus object in tm using our four documents. We then apply various cleaning procedures, two of which need comment.
 
-First, we remove **stop words** from the corpus. These are words which will add very little (if any) information to our analysis, but which are in many cases very common (words like *and* and *you*). Removing these words reduces the amount of data which has to be analysed and this speeds up the topic modeling procedure. Secondly, we apply a **stemming** procedure. Topic modeling is a semantic analysis. Therefore, we want different forms of a base word to be treated as the same. For example, *dog* and *dogs* will make the same semantic contribution to topics, and the same should be true for forms such as *eat*, *eats*, *eating* and *eaten*. One way of achieving this is to assign every word form to a base form (usually called a **lemma**), but this is time consuming and requires a very detailed dictionary. Instead, we exploit the fact that English inflectional morphology uses only suffixes (adding bits at the end of words). Stemming is the process of removing certain strings (e.g. *-ing*) from the end of words so that the kind of groups shown above all look the same. As you will see when you run the code, the output of this process can look odd at first!
+First, we remove **stop words** and **whitespace** from the corpus.
 
 ```{r}
 # create tm corpus
-twitter_corpus <- Corpus(VectorSource(oztweets))
+twitter_corpus <- Corpus(VectorSource(normalised_tweets))
 
 # check results
-str(as.character(twitter_corpus[[4]]))
+str(as.character(twitter_corpus[[1]]))
 
 # preprocessing
 processedCorpus <- tm_map(twitter_corpus, removeWords, stopwords("english"))
-processedCorpus <- tm_map(processedCorpus, stemDocument, language = "en")
 processedCorpus <- tm_map(processedCorpus, stripWhitespace)
 
 # check again
-str(as.character(processedCorpus[[4]]))
+str(as.character(processedCorpus[[1]]))
+
+processedCorpus
 ```
 
 ## The analysis
 
 The topic modeling algorithm works on a **document-term matrix** - a table which tracks the number of occurrences of each term (word type) in each document. The line **dim(DTM)** shows us how many terms we have in our corpus (we already know how many documents there are).
 
-We will start by looking for 20 topics - this is an edcuated guess! The algorithm uses random numbers for sampling and we need to set a seed for that process. Then we can run the analysis. We are using the most common algorithm for topic modeling, **Latent Dirichlet Allocation**, which is based on the [Dirichlet distribution](https://en.wikipedia.org/wiki/Dirichlet_distribution).
+We will start by looking for 3 topics - this is a guess! The algorithm uses random numbers for sampling and we need to set a seed for that process. Then we can run the analysis. We are using the most common algorithm for topic modeling, **Latent Dirichlet Allocation**, which is based on the [Dirichlet distribution](https://en.wikipedia.org/wiki/Dirichlet_distribution).
 
 ```{r}
 # compute document term matrix 
@@ -105,7 +93,7 @@ DTM <- DocumentTermMatrix(processedCorpus)
 dim(DTM)
 
 # number of topics
-K <- 20
+K <- 3
 # set random number generator seed
 set.seed(9161)
 # compute the LDA model, inference via 1000 iterations of Gibbs sampling
@@ -145,45 +133,19 @@ Now let's find out whether different topics are associated with different politi
 top5termsPerTopic <- terms(topicModel, 5)
 topicNames <- apply(top5termsPerTopic, 2, paste, collapse=" ")
 
+topicNames
 
-exampleIds <- c(1,2,3,4)
 N <- length(exampleIds)
 # get topic proportions form example documents
-topicProportionExamples <- theta[exampleIds,]
+topicProportionExamples <- theta
+
 colnames(topicProportionExamples) <- topicNames
-vizDataFrame <- melt(cbind(data.frame(topicProportionExamples), document = factor(1:N)), variable.name = "topic", id.vars = "document")
 
-# add party names to documents
-parties <- gsub(".*/", "", my_files)
-parties <- gsub(".csv", "", parties)
-
-vizDataFrame$party <- ifelse(vizDataFrame$document == 1, parties[1],
-                                ifelse(vizDataFrame$document == 2, parties[2],
-                                       ifelse(vizDataFrame$document == 3, parties[3],
-                                              ifelse(vizDataFrame$document == 4, parties[4], NA))))
-
-
-# inspect
-head(vizDataFrame)
 ```
 
 
+## Exercises:
 
-```{r}
-ggplot(data = vizDataFrame, aes(topic, value, fill = party), ylab = "proportion") + 
-  geom_bar(stat="identity") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +  
-  coord_flip() +
-  facet_wrap(~ party, ncol = N) + 
-  theme(legend.position = "none")
-```
-
-
-## Going further
-
-You can go back and experiment with using different numbers of topics. If you look at the code under the heading **The analysis**, you will see the line:
-
-K <- 20
-
-You can change the number in that line and rerun all the following code to see what the results look like with either fewer topics or more topics.
+1. How does changing the number of topic K impact your interpretation of the results?
+2. What does running the same analysis for echidna_minimal.csv look like.
 
