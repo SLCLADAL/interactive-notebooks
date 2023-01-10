@@ -1,4 +1,4 @@
-install.packages('Bortuta')
+install.packages('Boruta')
 install.packages('caret')
 install.packages('dplyr')
 install.packages('flextable')
