@@ -1,5 +1,6 @@
 install.packages("adehabitatHR")
 install.packages('Boruta')
+install.packages('car')
 install.packages('caret')
 install.packages('dplyr')
 install.packages('flextable')
